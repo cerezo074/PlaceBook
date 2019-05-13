@@ -38,6 +38,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         getCurrentLocation()
+        setupGoogleClient()
         mMap.setOnPoiClickListener {
             displayPOI(it)
         }
@@ -58,7 +59,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
                 val place = places.get(0)
                 Toast.makeText(this, "{$place.name} {${place.phoneNumber}}", Toast.LENGTH_LONG).show()
             } else {
-                Log.e(TAG, "Error with getPlaceById ${places.status.statusMessage}")
+                Log.e(TAG, "Error with getPlaceById ${places.status}")
             }
                 places.release()
         }
