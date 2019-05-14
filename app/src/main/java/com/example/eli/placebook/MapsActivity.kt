@@ -28,7 +28,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+
         val mapFragment = supportFragmentManager
                 .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
@@ -55,12 +55,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
         Places.GeoDataApi
             .getPlaceById(googleApiClient, pointOfInterest.placeId)
             .setResultCallback { places ->
-            if (places.status.isSuccess && places.count > 0) {
-                val place = places.get(0)
-                Toast.makeText(this, "{$place.name} {${place.phoneNumber}}", Toast.LENGTH_LONG).show()
-            } else {
-                Log.e(TAG, "Error with getPlaceById ${places.status}")
-            }
+                if (places.status.isSuccess) {
+                    val place = places.get(0)
+                    Toast.makeText(this, "{$place.name} {${place.phoneNumber}}", Toast.LENGTH_LONG).show()
+                } else {
+                    Log.e(TAG, "Error with getPlaceById ${places.status}")
+                }
+
                 places.release()
         }
     }

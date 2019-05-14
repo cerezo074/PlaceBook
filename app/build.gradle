@@ -36,4 +36,5 @@ dependencies {
 
     //Places
     implementation "com.google.android.gms:play-services-places:$play_services_version"
+    implementation 'com.google.android.libraries.places:places-compat:1.1.0'
 }
