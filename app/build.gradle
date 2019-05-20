@@ -31,9 +31,11 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
     //Location
-    implementation "com.google.android.gms:play-services-location:$play_services_version"
-    implementation "com.google.android.gms:play-services-maps:$play_services_version"
+    implementation "com.google.android.gms:play-services-location:${play_services_version}"
+    implementation "com.google.android.gms:play-services-maps:${play_services_location_version}"
 
     //Places
-    implementation "com.google.android.gms:play-services-places:$play_services_version"
+    implementation "com.google.android.gms:play-services-places:${play_services_location_version}"
+    implementation 'com.google.android.libraries.places:places:1.1.0'
+
 }

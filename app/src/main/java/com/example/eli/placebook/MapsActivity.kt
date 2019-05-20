@@ -7,10 +7,9 @@ import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.util.Log
 import android.widget.Toast
-import com.google.android.gms.common.ConnectionResult
-import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.*
-import com.google.android.gms.location.places.Places
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.Place.Field
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -18,12 +17,16 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PointOfInterest
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.FetchPlaceRequest
+import com.google.android.libraries.places.api.net.PlacesClient
+import java.util.*
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener {
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
     private lateinit var fusedLocationProvider: FusedLocationProviderClient
-    private lateinit var googleApiClient: GoogleApiClient
+    private lateinit var placesClient: PlacesClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,36 +41,28 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleApiClient.On
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         getCurrentLocation()
-        setupGoogleClient()
+        setupPlacesClient()
         mMap.setOnPoiClickListener {
             displayPOI(it)
         }
     }
 
-    private fun setupGoogleClient() {
-        googleApiClient = GoogleApiClient.Builder(this)
-            .enableAutoManage(this, this)
-            .addApi(Places.GEO_DATA_API)
-            .build()
+    private fun setupPlacesClient() {
+        Places.initialize(applicationContext, getString(R.string.google_maps_key))
+        placesClient = Places.createClient(this)
     }
 
     private fun displayPOI(pointOfInterest: PointOfInterest) {
-        Places.GeoDataApi
-            .getPlaceById(googleApiClient, pointOfInterest.placeId)
-            .setResultCallback { places ->
-                if (places.status.isSuccess) {
-                    val place = places.get(0)
-                    Toast.makeText(this, "{$place.name} {${place.phoneNumber}}", Toast.LENGTH_LONG).show()
-                } else {
-                    Log.e(TAG, "Error with getPlaceById ${places.status}")
-                }
+        val placeFields = Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.PHONE_NUMBER)
+        val request = FetchPlaceRequest.builder(pointOfInterest.placeId, placeFields).build()
 
-                places.release()
-        }
-    }
-
-    override fun onConnectionFailed(connectionResult: ConnectionResult) {
-        Log.d(TAG, "Google play connection failed: {${connectionResult.errorMessage}}")
+        placesClient.fetchPlace(request)
+            .addOnSuccessListener {
+                    Toast.makeText(this, "${it.place.name} ${it.place.phoneNumber}", Toast.LENGTH_LONG).show()
+            }
+            .addOnFailureListener {
+                Log.e(TAG, "Error with getPlaceById ${it}")
+            }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
