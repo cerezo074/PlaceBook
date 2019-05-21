@@ -24,7 +24,6 @@ import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FetchPhotoRequest
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.PlacesClient
-import kotlinx.android.synthetic.main.activity_maps.*
 import java.util.*
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -86,20 +85,23 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun displayPoiGetPhotoStep(place: Place) {
-        val photoMetada = place.photoMetadatas?.get(0) ?: return
+        val photoMetadata = place.photoMetadatas?.get(0) ?: return
 
-        val photoRequest = FetchPhotoRequest.builder(photoMetada as PhotoMetadata)
+        val photoRequest = FetchPhotoRequest.builder(photoMetadata)
             .setMaxWidth(resources.getDimensionPixelSize(R.dimen.default_image_width))
             .setMaxHeight(resources.getDimensionPixelSize(R.dimen.default_image_height))
             .build()
 
         placesClient.fetchPhoto(photoRequest).addOnSuccessListener { fetchPhotoResponse ->
             val bitmap = fetchPhotoResponse.bitmap
+            displayPoiDisplayStep(place, bitmap)
         }.addOnFailureListener { exception ->
             if (exception is ApiException) {
                 val statusCode = exception.statusCode
                 Log.e(TAG, "Place not found: ${exception.message}, statusCode: ${statusCode}")
             }
+
+            displayPoiDisplayStep(place, null)
         }
     }
 
