@@ -2,24 +2,29 @@ package com.example.eli.placebook
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.util.Log
-import android.widget.Toast
+import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.location.*
 import com.google.android.libraries.places.api.Places
-import com.google.android.libraries.places.api.model.Place.Field
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PointOfInterest
+import com.google.android.libraries.places.api.model.PhotoMetadata
 import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.FetchPhotoRequest
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.PlacesClient
+import kotlinx.android.synthetic.main.activity_maps.*
 import java.util.*
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -28,12 +33,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var fusedLocationProvider: FusedLocationProviderClient
     private lateinit var placesClient: PlacesClient
 
+    private val placeFields = Arrays.asList(
+        Place.Field.ID,
+        Place.Field.NAME,
+        Place.Field.PHONE_NUMBER,
+        Place.Field.PHOTO_METADATAS,
+        Place.Field.ADDRESS,
+        Place.Field.LAT_LNG
+    )
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
 
-        val mapFragment = supportFragmentManager
-                .findFragmentById(R.id.map) as SupportMapFragment
+        val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
         setupLocationClient()
     }
@@ -53,16 +67,51 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun displayPOI(pointOfInterest: PointOfInterest) {
-        val placeFields = Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.PHONE_NUMBER)
+        diplayPoiGetPlaceStep(pointOfInterest)
+    }
+
+    private fun diplayPoiGetPlaceStep(pointOfInterest: PointOfInterest) {
         val request = FetchPlaceRequest.builder(pointOfInterest.placeId, placeFields).build()
 
         placesClient.fetchPlace(request)
             .addOnSuccessListener {
-                    Toast.makeText(this, "${it.place.name} ${it.place.phoneNumber}", Toast.LENGTH_LONG).show()
+                displayPoiGetPhotoStep(it.place)
             }
             .addOnFailureListener {
-                Log.e(TAG, "Error with getPlaceById ${it}")
+                if (it is ApiException) {
+                    val statusCode = it.statusCode
+                    Log.e(TAG, "Place not found: ${it.message}, statusCode:  ${statusCode}")
+                }
             }
+    }
+
+    private fun displayPoiGetPhotoStep(place: Place) {
+        val photoMetada = place.photoMetadatas?.get(0) ?: return
+
+        val photoRequest = FetchPhotoRequest.builder(photoMetada as PhotoMetadata)
+            .setMaxWidth(resources.getDimensionPixelSize(R.dimen.default_image_width))
+            .setMaxHeight(resources.getDimensionPixelSize(R.dimen.default_image_height))
+            .build()
+
+        placesClient.fetchPhoto(photoRequest).addOnSuccessListener { fetchPhotoResponse ->
+            val bitmap = fetchPhotoResponse.bitmap
+        }.addOnFailureListener { exception ->
+            if (exception is ApiException) {
+                val statusCode = exception.statusCode
+                Log.e(TAG, "Place not found: ${exception.message}, statusCode: ${statusCode}")
+            }
+        }
+    }
+
+    private fun displayPoiDisplayStep(place: Place, photo: Bitmap?) {
+        val iconPhoto = if (photo == null) {
+            BitmapDescriptorFactory.defaultMarker()
+        } else {
+            BitmapDescriptorFactory.fromBitmap(photo)
+        }
+
+        val marketOptions = MarkerOptions().position(place.latLng as LatLng).icon(iconPhoto).title(place.name).snippet(place.phoneNumber)
+        mMap.addMarker(marketOptions)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
