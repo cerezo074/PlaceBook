@@ -11,16 +11,15 @@ import com.example.eli.placebook.Adapter.BookmarkInfoWindowAdapter
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.location.*
 import com.google.android.libraries.places.api.Places
-
+import android.view.View
+import android.widget.ProgressBar
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PointOfInterest
-import com.google.android.libraries.places.api.model.PhotoMetadata
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FetchPhotoRequest
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
@@ -32,6 +31,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var mMap: GoogleMap
     private lateinit var fusedLocationProvider: FusedLocationProviderClient
     private lateinit var placesClient: PlacesClient
+    private lateinit var loader: ProgressBar
+    private var enableTouch: Boolean = true
 
     private val placeFields = Arrays.asList(
         Place.Field.ID,
@@ -42,11 +43,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         Place.Field.LAT_LNG
     )
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
 
+        loader = findViewById(R.id.loader)
+        loader.visibility = View.GONE
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
         setupLocationClient()
@@ -68,6 +70,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun displayPOI(pointOfInterest: PointOfInterest) {
+        if (!enableTouch) {
+            return
+        }
+
+        loader.visibility = View.VISIBLE
+        enableTouch = false
         diplayPoiGetPlaceStep(pointOfInterest)
     }
 
@@ -115,6 +123,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         val marker = mMap.addMarker(marketOptions)
         marker.tag = photo
+        loader.visibility = View.GONE
+        enableTouch = true
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -151,6 +161,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
+
 
     companion object {
         private const val REQUEST_LOCATION = 1
