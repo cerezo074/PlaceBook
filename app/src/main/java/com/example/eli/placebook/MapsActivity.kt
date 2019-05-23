@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.util.Log
+import com.example.eli.placebook.Adapter.BookmarkInfoWindowAdapter
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.location.*
 import com.google.android.libraries.places.api.Places
@@ -53,6 +54,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+        mMap.setInfoWindowAdapter(BookmarkInfoWindowAdapter(this))
         getCurrentLocation()
         setupPlacesClient()
         mMap.setOnPoiClickListener {
@@ -106,14 +108,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun displayPoiDisplayStep(place: Place, photo: Bitmap?) {
-        val iconPhoto = if (photo == null) {
-            BitmapDescriptorFactory.defaultMarker()
-        } else {
-            BitmapDescriptorFactory.fromBitmap(photo)
-        }
+        val marketOptions = MarkerOptions()
+            .position(place.latLng as LatLng)
+            .title(place.name)
+            .snippet(place.phoneNumber)
 
-        val marketOptions = MarkerOptions().position(place.latLng as LatLng).icon(iconPhoto).title(place.name).snippet(place.phoneNumber)
-        mMap.addMarker(marketOptions)
+        val marker = mMap.addMarker(marketOptions)
+        marker.tag = photo
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
