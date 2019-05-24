@@ -1,4 +1,4 @@
-package com.example.eli.placebook
+package com.example.eli.placebook.UI
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -13,6 +13,7 @@ import com.google.android.gms.location.*
 import com.google.android.libraries.places.api.Places
 import android.view.View
 import android.widget.ProgressBar
+import com.example.eli.placebook.R
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -142,7 +143,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun requestLocationPermissions() {
-        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), REQUEST_LOCATION)
+        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+            REQUEST_LOCATION
+        )
     }
 
     private fun getCurrentLocation() {

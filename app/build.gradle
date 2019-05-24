@@ -30,6 +30,9 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
+    //UI
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+
     //Location
     implementation "com.google.android.gms:play-services-location:${play_services_version}"
     implementation "com.google.android.gms:play-services-maps:${play_services_location_version}"
@@ -37,6 +40,13 @@ dependencies {
     //Places
     implementation "com.google.android.gms:play-services-places:${play_services_location_version}"
     implementation 'com.google.android.libraries.places:places:1.1.0'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+
+    //LifeCycle
+    implementation "android.arch.lifecycle:extensions:$architecture_version"
+    implementation "android.arch.lifecycle:compiler:$architecture_version"
+
+    //Persistence - Room
+    implementation "android.arch.persistence.room:runtime:$room_version"
+    implementation "android.arch.persistence.room:compiler:$room_version"
 
 }
