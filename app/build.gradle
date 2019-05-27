@@ -4,6 +4,8 @@ apply plugin: 'kotlin-android'
 
 apply plugin: 'kotlin-android-extensions'
 
+apply plugin: 'kotlin-kapt'
+
 android {
     compileSdkVersion 28
     defaultConfig {
@@ -13,6 +15,11 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        javaCompileOptions {
+            annotationProcessorOptions {
+                includeCompileClasspath true
+            }
+        }
     }
     buildTypes {
         release {
@@ -43,10 +50,13 @@ dependencies {
 
     //LifeCycle
     implementation "android.arch.lifecycle:extensions:$architecture_version"
-    implementation "android.arch.lifecycle:compiler:$architecture_version"
+    kapt "android.arch.lifecycle:compiler:$architecture_version"
 
     //Persistence - Room
     implementation "android.arch.persistence.room:runtime:$room_version"
-    implementation "android.arch.persistence.room:compiler:$room_version"
+    kapt "android.arch.persistence.room:compiler:$room_version"
+
+    //Coroutine
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.0"
 
 }

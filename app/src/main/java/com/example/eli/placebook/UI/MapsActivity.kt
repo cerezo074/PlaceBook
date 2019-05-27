@@ -1,6 +1,8 @@
 package com.example.eli.placebook.UI
 
 import android.Manifest
+import android.arch.lifecycle.ViewModelProvider
+import android.arch.lifecycle.ViewModelProviders
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.support.v7.app.AppCompatActivity
@@ -14,17 +16,21 @@ import com.google.android.libraries.places.api.Places
 import android.view.View
 import android.widget.ProgressBar
 import com.example.eli.placebook.R
+import com.example.eli.placebook.ViewModel.MapsViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PointOfInterest
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FetchPhotoRequest
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.PlacesClient
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.util.*
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -33,6 +39,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var fusedLocationProvider: FusedLocationProviderClient
     private lateinit var placesClient: PlacesClient
     private lateinit var loader: ProgressBar
+    private lateinit var mapsViewModel: MapsViewModel
     private var enableTouch: Boolean = true
 
     private val placeFields = Arrays.asList(
@@ -57,12 +64,25 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-        mMap.setInfoWindowAdapter(BookmarkInfoWindowAdapter(this))
         getCurrentLocation()
         setupPlacesClient()
+        setupMapListeners()
+        setViewModel()
+    }
+
+    private fun setupMapListeners() {
+        mMap.setInfoWindowAdapter(BookmarkInfoWindowAdapter(this))
         mMap.setOnPoiClickListener {
             displayPOI(it)
         }
+
+        mMap.setOnInfoWindowClickListener {
+            handleInfoWindowClick(it)
+        }
+    }
+
+    private fun setViewModel() {
+        mapsViewModel = ViewModelProviders.of(this).get(MapsViewModel::class.java)
     }
 
     private fun setupPlacesClient() {
@@ -123,7 +143,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             .snippet(place.phoneNumber)
 
         val marker = mMap.addMarker(marketOptions)
-        marker.tag = photo
+        marker.tag = PlaceInfo(place, photo)
         loader.visibility = View.GONE
         enableTouch = true
     }
@@ -165,9 +185,23 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    private fun handleInfoWindowClick(marker: Marker) {
+        val placeInfo =  marker.tag as PlaceInfo
+
+        if (placeInfo.place != null) {
+            GlobalScope.launch {
+                mapsViewModel.addBookmarkFromPlace(placeInfo.place, placeInfo.image)
+            }
+        }
+
+        marker.remove()
+    }
 
     companion object {
         private const val REQUEST_LOCATION = 1
         private const val TAG = "MapsActivity"
     }
+
+    class PlaceInfo(val place: Place? = null, val image: Bitmap? = null)
+
 }
